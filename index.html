@@ -956,7 +956,7 @@ function authView(){
     const email = f.email.value.trim(), password = f.pass.value;
     if (!email || password.length < 6) { st.textContent = "Введите почту и пароль не короче 6 символов."; return; }
     st.innerHTML = `<span class="spin"></span> Подождите…`;
-    const {data, error} = signup ? await sb.auth.signUp({email, password}) : await sb.auth.signInWithPassword({email, password});
+    const {data, error} = signup ? await sb.auth.signUp({email, password, options:{emailRedirectTo:location.origin + location.pathname}}) : await sb.auth.signInWithPassword({email, password});
     if (error) { st.textContent = /Invalid login/i.test(error.message) ? "Неверная почта или пароль. Если входите впервые — нажмите «Создать аккаунт»." : /already registered/i.test(error.message) ? "Такой аккаунт уже есть — нажмите «Войти»." : /not allowed|disabled/i.test(error.message) ? "Регистрация закрыта. Попросите Марго открыть её в Supabase." : error.message; return; }
     if (signup && !data.session) st.textContent = "Аккаунт создан. Подтвердите почту по ссылке из письма, затем войдите.";
   };
@@ -966,9 +966,12 @@ function authView(){
 async function boot(){
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   if (!sb) { authView(); return; }
+  const linkErr = /error_code=otp_expired|error=access_denied/.test(location.hash);
+  if (/(^#|&)(error|access_token)=/.test(location.hash)) setTimeout(() => history.replaceState(null, "", location.pathname + "#month"), 0);
   const {data} = await sb.auth.getSession();
   S.session = data.session;
   if (S.session) { $("#tabs").hidden = false; store.start(); } else authView();
+  if (!S.session && linkErr) { const st = $("#a-status"); if (st) st.textContent = "Ссылка из письма устарела. Войдите с почтой и паролем или создайте аккаунт заново."; }
   sb.auth.onAuthStateChange((ev, session) => {
     const was = !!S.session; S.session = session;
     if (session && !was) { $("#tabs").hidden = false; store.start(); }
