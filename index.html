@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b4a8b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Расходы">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Расходы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+img{max-width:100%}
+/* Layout: одна колонка-ленточка до 980px, шапка с переключателем месяца, вкладки, карточки по ролям; плавающая кнопка «Добавить». Палитра — японский индиго (ай) на прохладной бумаге. */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --surface-2:#eef1f7; --ink:#151a2b; --ink-2:#4a5169; --muted:#7a8199; --line:#dfe3ec;
+  --accent:#2b4a8b; --accent-ink:#ffffff; --accent-soft:#e3e9f6; --stamp:#c2362c;
+  --good:#1f7a43; --good-soft:#e2f2e8; --warn:#9a6200; --warn-soft:#fbf0d9; --bad:#b3261e; --bad-soft:#fbe5e3;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4;
+  --f-display:"Unbounded","Manrope",system-ui,sans-serif; --f-body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif; --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:12px; --shadow:0 1px 2px rgba(20,30,60,.06),0 4px 16px rgba(20,30,60,.05);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f121a; --surface:#181c27; --surface-2:#202534; --ink:#eceff7; --ink-2:#b5bbd0; --muted:#868da5; --line:#2b3142;
+  --accent:#93acea; --accent-ink:#0f1424; --accent-soft:#232c45; --stamp:#ec6a5f;
+  --good:#5cc489; --good-soft:#173525; --warn:#e2ac45; --warn-soft:#3a2d12; --bad:#f08a80; --bad-soft:#3d1c1a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f121a; --surface:#181c27; --surface-2:#202534; --ink:#eceff7; --ink-2:#b5bbd0; --muted:#868da5; --line:#2b3142;
+  --accent:#93acea; --accent-ink:#0f1424; --accent-soft:#232c45; --stamp:#ec6a5f;
+  --good:#5cc489; --good-soft:#173525; --warn:#e2ac45; --warn-soft:#3a2d12; --bad:#f08a80; --bad-soft:#3d1c1a;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+.wrap{max-width:980px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums;font-family:var(--f-mono);letter-spacing:-.01em}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font-family:var(--f-display);font-weight:500;font-size:17px;letter-spacing:-.01em}
+h3{font-size:14px;font-weight:700}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)} .ink2{color:var(--ink-2)}
+/* header */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:14px 0}
+.brand{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}
+.brand-l{display:flex;align-items:center;gap:10px;min-width:0}
+.brand h1{font-family:var(--f-display);font-size:19px;font-weight:700;letter-spacing:-.02em}
+.brand .sub{font-size:12px;color:var(--muted)}
+.monthnav{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.monthnav button{border:0;background:transparent;width:32px;height:32px;border-radius:50%;font-size:18px;color:var(--ink-2)}
+.monthnav button:hover{background:var(--surface-2)}
+.monthnav .m{min-width:128px;text-align:center;font-weight:700;font-size:14px}
+.iconbtn{border:1px solid var(--line);background:var(--surface);border-radius:999px;height:38px;padding:0 12px;font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.tabs{display:flex;gap:4px;overflow-x:auto;margin-top:12px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{flex:none;padding:10px 12px;color:var(--ink-2);text-decoration:none;font-weight:600;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a[aria-current="page"]{color:var(--ink);border-color:var(--accent)}
+.banner{margin-top:14px;padding:10px 14px;border-radius:10px;font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.banner.demo{background:var(--warn-soft);color:var(--ink)}
+.banner.info{background:var(--accent-soft)}
+main{display:grid;gap:16px;margin-top:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;min-width:0}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.hero{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end}
+.big{font-family:var(--f-display);font-size:clamp(30px,7vw,44px);font-weight:500;letter-spacing:-.03em;line-height:1}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.chip.up{background:var(--bad-soft);color:var(--bad)} .chip.down{background:var(--good-soft);color:var(--good)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.people{display:flex;gap:20px;flex-wrap:wrap}
+.people div{display:grid;gap:2px}
+.stackbar{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px;background:var(--surface-2)}
+.stackbar span{display:block;min-width:2px}
+.rows{display:grid}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.sw{width:10px;height:10px;border-radius:3px;flex:none}
+.tx{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;border-radius:6px}
+.tx:hover{background:var(--surface-2)}
+.tx .t{font-weight:600;min-width:0;overflow-wrap:anywhere}
+.tx .meta{font-size:12px;color:var(--muted)}
+.tag{font-size:11px;padding:1px 6px;border-radius:4px;background:var(--surface-2);color:var(--ink-2);font-weight:600}
+.daylabel{font-size:12px;color:var(--muted);font-weight:600;padding:12px 4px 4px}
+.check{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.check.done .t{color:var(--muted);text-decoration:line-through}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sm{padding:5px 10px;font-size:13px}
+.fab{position:fixed;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:6;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:14px 20px;font-weight:700;font-size:15px;box-shadow:0 6px 20px rgba(20,40,90,.28)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-top:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;border-top:0}
+td.r,th.r{text-align:right}
+.tablewrap{overflow-x:auto}
+details>summary{cursor:pointer;color:var(--ink-2);font-weight:600;font-size:13px;margin-top:10px}
+/* chart */
+.chart{position:relative}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart .axis{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .hit{fill:transparent}
+.chart .col:hover .seg,.chart .col.on .seg{filter:brightness(1.12)}
+.chart .col.sel .seg{stroke:var(--ink);stroke-width:0}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:8px;padding:8px 10px;font-size:12px;min-width:150px;z-index:3}
+.tip .h{font-weight:700;margin-bottom:4px}
+.tip .l{display:grid;grid-template-columns:12px 1fr auto;gap:6px;align-items:center}
+.tip .k{height:2px;border-radius:1px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--ink-2);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.hbar{display:grid;grid-template-columns:minmax(0,150px) 1fr auto;gap:10px;align-items:center;font-size:13px;padding:4px 0}
+.hbar .b{height:10px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.hbar .b i{display:block;height:100%;background:var(--s3);border-radius:5px}
+.hbar .n{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg-ctl{display:inline-flex;background:var(--surface-2);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg-ctl button{border:0;background:transparent;padding:6px 10px;border-radius:7px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.seg-ctl button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.ai{border-color:var(--accent);background:linear-gradient(0deg,var(--surface),var(--surface)) padding-box}
+.ai-out{display:grid;gap:14px;margin-top:12px}
+.ai-out ul{margin:6px 0 0;padding-left:18px}
+.ai-out li{margin:4px 0}
+.recipe{border:1px solid var(--line);border-radius:10px;padding:12px}
+.jp{font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",var(--f-body);color:var(--muted);font-size:12px}
+/* modal */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(10,14,28,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--ink);width:100%;max-width:620px;max-height:calc(100% - 24px - env(safe-area-inset-top,0px));overflow:auto;border-radius:18px 18px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+@media (min-width:700px){.overlay{align-items:center}.sheet{border-radius:18px}}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.x{border:0;background:var(--surface-2);width:34px;height:34px;border-radius:50%;font-size:18px}
+.form{display:grid;gap:12px}
+.f{display:grid;gap:4px;min-width:0}
+.f label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.f input,.f select,.f textarea{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:9px 10px;width:100%;min-width:0}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:440px){.f3{grid-template-columns:1fr 1fr}}
+.items{display:grid;gap:6px}
+.item{display:grid;grid-template-columns:1fr 92px 32px;gap:6px;align-items:start;padding:8px;border:1px solid var(--line);border-radius:9px}
+.item .sub2{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 64px;gap:6px}
+.item input,.item select{border:1px solid var(--line);background:var(--bg);border-radius:7px;padding:6px 8px;width:100%;min-width:0;font-size:13px}
+.item .rm{border:0;background:transparent;color:var(--muted);font-size:18px;height:32px}
+.menu{display:grid;gap:8px}
+.menu button{display:grid;grid-template-columns:36px 1fr;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:12px}
+.menu button:hover{border-color:var(--accent)}
+.menu .ic{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-weight:700;color:#fff;font-size:13px}
+.menu b{display:block} .menu small{color:var(--muted)}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:20px;text-align:center;display:grid;gap:10px;justify-items:center}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.thumbs img{height:80px;border-radius:6px;border:1px solid var(--line)}
+.status{font-size:13px;color:var(--ink-2)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:14px;z-index:30}
+.kpi{display:grid;gap:3px}
+.pcols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.pcol{background:var(--surface-2);border-radius:10px;padding:12px 12px 6px;min-width:0}
+.pcol .card-h{padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.pcol .tx{border-top:0;padding:9px 4px}
+.pcol .tx + .tx{border-top:1px solid var(--line)}
+.pcol .tx:hover{background:var(--surface)}
+.kpi .v{font-size:20px;font-weight:700}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-l">
+        <div><h1>Расходы</h1><div class="sub" id="who-line">Марго и Миша</div></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <div class="monthnav" role="group" aria-label="Месяц">
+          <button id="m-prev" aria-label="Предыдущий месяц">‹</button>
+          <div class="m" id="m-label"></div>
+          <button id="m-next" aria-label="Следующий месяц">›</button>
+        </div>
+        <button class="iconbtn" id="btn-settings" aria-label="Настройки">⚙ <span id="sync">…</span></button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs">
+      <a href="#month">Месяц</a>
+      <a href="#utilities">Коммуналка</a>
+      <a href="#food">Продукты</a>
+      <a href="#regular">Подписки и связь</a>
+      <a href="#stats">Статистика</a>
+    </nav>
+  </header>
+  <div id="banner"></div>
+  <main id="view"><div class="card empty">Загружаем данные…</div></main>
+</div>
+<button class="fab" id="fab">＋ Добавить</button>
+<div id="modal"></div>
+
+<script src="config.js"></script>
+<script src="vendor.js"></script>
+<script>
+(() => {
+"use strict";
+// ---------- constants ----------
+const CATS = {
+  util:{ru:"Коммунальные", c:"var(--s1)", ic:"光"},
+  sub:{ru:"Подписки", c:"var(--s2)", ic:"♺"},
+  food:{ru:"Продукты", c:"var(--s3)", ic:"食"},
+  tel:{ru:"Связь и интернет", c:"var(--s4)", ic:"☎"},
+  other:{ru:"Другое", c:"var(--s5)", ic:"…"}
+};
+const CAT_ORDER = ["util","sub","food","tel","other"];
+const UTIL = {
+  electric:{ru:"Электричество", jp:"電気", unit:"кВт·ч", c:"var(--s1)"},
+  gas:{ru:"Газ", jp:"ガス", unit:"м³", c:"var(--s2)"},
+  water:{ru:"Вода", jp:"水道", unit:"м³", c:"var(--s3)"},
+  rent:{ru:"Аренда", jp:"家賃", unit:"", c:"var(--s5)"},
+  other:{ru:"Прочее (обслуживание и т.п.)", jp:"管理費", unit:"", c:"var(--s4)"}
+};
+const TEL = {mobile:"Мобильная связь", internet:"Домашний интернет", other:"Другое"};
+const GROUPS = ["Овощи и фрукты","Мясо и рыба","Молочное и яйца","Тофу, натто, соевое","Рис, хлеб, лапша","Готовая еда и бэнто","Замороженное","Соусы и специи","Снеки и сладости","Напитки","Алкоголь","Бытовое (не еда)","Другое"];
+
+// ---------- helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const yen = n => (n < 0 ? "−¥" : "¥") + Math.abs(Math.round(n || 0)).toLocaleString("en-US");
+const yenK = n => n >= 10000 ? "¥" + (Math.round(n/1000)).toLocaleString("en-US") + "k" : yen(n);
+const pad = n => String(n).padStart(2, "0");
+const todayStr = () => { const d = new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); };
+const curMonth = () => todayStr().slice(0,7);
+const addMonths = (m, k) => { let [y, mo] = m.split("-").map(Number); mo += k; while (mo < 1) { mo += 12; y--; } while (mo > 12) { mo -= 12; y++; } return y + "-" + pad(mo); };
+const monthName = (m, short) => { const [y, mo] = m.split("-").map(Number); const s = new Date(y, mo-1, 1).toLocaleString("ru-RU", short ? {month:"short"} : {month:"long", year:"numeric"}).replace(" г.", ""); return s.charAt(0).toUpperCase() + s.slice(1); };
+const dayLabel = d => { const [y,m,dd] = d.split("-").map(Number); return new Date(y,m-1,dd).toLocaleString("ru-RU",{day:"numeric",month:"long",weekday:"short"}); };
+const sum = (arr, f) => arr.reduce((a, x) => a + (Number(f ? f(x) : x) || 0), 0);
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const ls = { get(k, d){ try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } }, set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+let toastT; function toast(msg){ let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.append(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2400); }
+
+// ---------- state ----------
+const S = {
+  expenses: [], recurring: [], settings: {a:"Марго", b:"Миша"}, insights: null,
+  loaded: {expenses:false, recurring:false}, mode: "loading", // db | local | loading
+  month: ls.get("kk-month", null) || curMonth(), tab: "month",
+  foodRange: ls.get("kk-foodrange", "3"), canWrite: true
+};
+if (S.month > curMonth()) S.month = curMonth();
+const whoName = w => w === "a" ? S.settings.a || "Марго" : w === "b" ? S.settings.b || "Миша" : "Общее";
+
+// ---------- storage adapter ----------
+const CFG = window.APP_CONFIG || {};
+const configured = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY && !/ВСТАВЬТЕ/.test(CFG.SUPABASE_URL + CFG.SUPABASE_ANON_KEY));
+const sb = configured ? window.supabaseCreateClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, {auth:{persistSession:true, autoRefreshToken:true}}) : null;
+const store = {
+  rows: new Map(), channel: null,
+  key: (c, id) => c + "/" + id,
+  apply(){
+    const ex = [], rec = []; let settings = null, insights = null, secret = null;
+    for (const r of this.rows.values()) {
+      if (r.collection === "expenses") ex.push({...r.data, id:r.id});
+      else if (r.collection === "recurring") rec.push({...r.data, id:r.id});
+      else if (r.collection === "meta" && r.id === "settings") settings = r.data;
+      else if (r.collection === "meta" && r.id === "food") insights = r.data;
+      else if (r.collection === "secret" && r.id === "anthropic") secret = r.data;
+    }
+    S.expenses = ex; S.recurring = rec;
+    S.settings = {a:"Марго", b:"Миша", ...(settings || {})};
+    S.insights = insights; S.apiKey = secret && secret.key || "";
+    S.loaded = {expenses:true, recurring:true};
+    render();
+  },
+  async loadAll(){
+    const all = []; const page = 1000;
+    for (let from = 0; ; from += page) {
+      const {data, error} = await sb.from("docs").select("collection,id,data").range(from, from + page - 1);
+      if (error) throw error;
+      all.push(...data); if (data.length < page) break;
+    }
+    this.rows = new Map(all.map(r => [this.key(r.collection, r.id), r]));
+    S.syncNote = null; this.apply();
+  },
+  async start(){
+    S.mode = "db";
+    try { await this.loadAll(); } catch (e) { S.syncNote = "Не удалось загрузить данные: " + (e.message || e) + ". Проверьте интернет."; render(); }
+    if (this.channel) sb.removeChannel(this.channel);
+    this.channel = sb.channel("docs-live").on("postgres_changes", {event:"*", schema:"public", table:"docs"}, p => {
+      if (p.eventType === "DELETE") { if (p.old && p.old.collection) this.rows.delete(this.key(p.old.collection, p.old.id)); else { this.loadAll().catch(() => {}); return; } }
+      else if (p.new) this.rows.set(this.key(p.new.collection, p.new.id), p.new);
+      this.apply();
+    }).subscribe();
+  },
+  async put(col, id, data){
+    const row = {collection:col, id, data, updated_at:new Date().toISOString()};
+    const {error} = await sb.from("docs").upsert(row);
+    if (error) throw error;
+    this.rows.set(this.key(col, id), row); this.apply();
+  },
+  async add(col, data){ return this.put(col, uid(), data); },
+  async del(col, id){
+    const {error} = await sb.from("docs").delete().match({collection:col, id});
+    if (error) throw error;
+    this.rows.delete(this.key(col, id)); this.apply();
+  },
+  async setPaid(id, m, v){
+    const r = this.rows.get(this.key("recurring", id)); if (!r) return;
+    const data = {...r.data, paid:{...(r.data.paid || {}), [m]:v}};
+    return this.put("recurring", id, data);
+  },
+  async meta(name, data){ return this.put("meta", name, data); }
+};
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && S.mode === "db") store.loadAll().catch(() => {}); });
+async function safe(p, ok){ try { await p; if (ok) toast(ok); return true; } catch (e) { toast("Не сохранилось: " + (e && (e.message || e.code) || "ошибка") + ". Проверьте интернет."); return false; } }
+
+// ---------- demo data (shown only while the store is empty) ----------
+function makeDemo(){
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const end = curMonth(); const start = addMonths(end, -5);
+  const exp = []; const PRODUCTS = [
+    ["鶏もも肉","Куриное бедро","Мясо и рыба",398],["卵 10個","Яйца","Молочное и яйца",268],["牛乳","Молоко","Молочное и яйца",228],
+    ["豆腐","Тофу","Тофу, натто, соевое",88],["納豆 3P","Натто","Тофу, натто, соевое",98],["キャベツ","Капуста","Овощи и фрукты",198],
+    ["玉ねぎ","Лук","Овощи и фрукты",198],["もやし","Ростки сои","Овощи и фрукты",39],["人参","Морковь","Овощи и фрукты",158],
+    ["バナナ","Бананы","Овощи и фрукты",158],["食パン","Хлеб","Рис, хлеб, лапша",168],["豚こま","Свинина нарезка","Мясо и рыба",358],
+    ["鮭切身","Лосось","Мясо и рыба",498],["ヨーグルト","Йогурт","Молочное и яйца",158],["おにぎり","Онигири","Готовая еда и бэнто",138],
+    ["弁当","Бэнто","Готовая еда и бэнто",498],["お茶 2L","Чай в бутылке","Напитки",158],["ビール 6缶","Пиво","Алкоголь",1180],
+    ["チョコ","Шоколад","Снеки и сладости",198],["うどん 3食","Удон","Рис, хлеб, лапша",128],["冷凍餃子","Гёдза замороженные","Замороженное",298],["醤油","Соевый соус","Соусы и специи",298]
+  ];
+  for (let m = start; m <= end; m = addMonths(m, 1)) {
+    const mo = Number(m.slice(5)); const winter = [12,1,2,3].includes(mo), summer = [7,8,9].includes(mo);
+    const kwh = Math.round(220 + (winter ? 160 : summer ? 120 : 0) + rnd()*40);
+    exp.push({id:"demo-e"+m, cat:"util", kind:"electric", title:"Электричество", amount:Math.round(kwh*31.5), usage:kwh, period:1, who:"both", date:m+"-12"});
+    const gm = Math.round(14 + (winter ? 14 : 0) + rnd()*4);
+    exp.push({id:"demo-g"+m, cat:"util", kind:"gas", title:"Газ", amount:Math.round(1060 + gm*172), usage:gm, period:1, who:"both", date:m+"-15"});
+    if (mo % 2 === 0) exp.push({id:"demo-w"+m, cat:"util", kind:"water", title:"Вода (2 мес.)", amount:Math.round(4600 + rnd()*700), usage:Math.round(30+rnd()*6), period:2, who:"both", date:m+"-20"});
+    const trips = 6 + Math.floor(rnd()*3);
+    for (let t = 0; t < trips; t++) {
+      const items = []; const n = 4 + Math.floor(rnd()*6);
+      for (let i = 0; i < n; i++) { const p = PRODUCTS[Math.floor(rnd()*PRODUCTS.length)]; items.push({jp:p[0], ru:p[1], group:p[2], qty:1, price:p[3]}); }
+      if (rnd() < .5) items.push({jp:"米 5kg", ru:"Рис", group:"Рис, хлеб, лапша", qty:1, price:2680});
+      const sub = sum(items, x => x.price);
+      exp.push({id:"demo-f"+m+t, cat:"food", title:["Супермаркет","Дискаунтер","Комбини"][t%3], store:["Супермаркет","Дискаунтер","Комбини"][t%3], amount:Math.round(sub*1.08), who:"both", date:m+"-"+pad(2+Math.floor(t*27/trips)), items});
+    }
+    if (rnd() < .6) exp.push({id:"demo-o"+m, cat:"other", title:"Аптека", amount:Math.round(800+rnd()*2400), who: rnd()<.5?"a":"b", date:m+"-09"});
+  }
+  const R = (id, title, cat, kind, amount, who, cycle = "month", startM = start, payDay = 27) => ({id:"demo-r"+id, title, cat, kind, amount, amounts:[{from:startM, amount}], who, cycle, startMonth:startM, payDay, paid:{}});
+  const rec = [
+    R(1,"Аренда квартиры","util","rent",88000,"both","month",start,27),
+    R(2,"Обслуживание дома","util","other",5000,"both","month",start,27),
+    R(3,"Мобильная связь","tel","mobile",2970,"a","month",start,10),
+    R(4,"Мобильная связь","tel","mobile",3278,"b","month",start,10),
+    R(5,"Домашний интернет (光回線)","tel","internet",5170,"both","month",start,26),
+    R(6,"Видеостриминг","sub","",1490,"both","month",start,5),
+    R(7,"Музыка","sub","",1080,"a","month",start,18),
+    R(8,"Игровая подписка","sub","",850,"b","month",start,3),
+    R(9,"Облачное хранилище","sub","",400,"a","month",start,1),
+    R(10,"Доставка + видео (год)","sub","",5900,"b","year",addMonths(start,2),14)
+  ];
+  return {expenses:exp, recurring:rec};
+}
+let DEMO = null;
+const isDemo = () => S.loaded.expenses && S.loaded.recurring && !S.expenses.length && !S.recurring.length;
+const data = () => { if (isDemo()) { DEMO = DEMO || makeDemo(); return DEMO; } return S; };
+
+// ---------- domain ----------
+function recActive(r, m){ if (!r.startMonth || m < r.startMonth) return false; if (r.endMonth && m > r.endMonth) return false; if (r.cycle === "year") return m.slice(5) === r.startMonth.slice(5); return true; }
+function amountFor(r, m){ const h = (r.amounts || []).filter(x => x.from <= m).sort((a,b) => a.from < b.from ? -1 : 1); return h.length ? Number(h[h.length-1].amount) : Number(r.amount || 0); }
+function entries(m){
+  const D = data();
+  const out = D.expenses.filter(e => (e.date || "").slice(0,7) === m).map(e => ({...e, src:"exp"}));
+  for (const r of D.recurring) if (recActive(r, m)) {
+    const day = Math.min(Number(r.payDay) || 1, 28);
+    out.push({id:"r:" + r.id, rid:r.id, src:"rec", cat:r.cat, kind:r.kind, title:r.title, amount:amountFor(r, m), who:r.who, cycle:r.cycle, date:m + "-" + pad(day), paid:!!(r.paid && r.paid[m])});
+  }
+  return out.sort((a, b) => a.date < b.date ? 1 : a.date > b.date ? -1 : 0);
+}
+const catTotals = list => { const t = {}; CAT_ORDER.forEach(c => t[c] = 0); list.forEach(e => t[e.cat in t ? e.cat : "other"] += Number(e.amount) || 0); return t; };
+const monthsBack = (end, n) => Array.from({length:n}, (_, i) => addMonths(end, i - n + 1));
+
+// ---------- chart ----------
+function niceMax(v){ if (v <= 0) return 1000; const p = Math.pow(10, Math.floor(Math.log10(v))); for (const k of [1, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10]) if (k*p >= v) return k*p; return 10*p; }
+// cols: [{label, key, parts:{k:v}}], series: [{k,label,c}]
+function stackChart(cols, series, opts = {}){
+  const W = window.innerWidth < 560 ? 380 : 640, H = opts.h || 220, L = 46, B = 24, T = 8;
+  const max = niceMax(Math.max(...cols.map(c => sum(series, s => c.parts[s.k] || 0)), 0));
+  const y = v => T + (H - T - B) * (1 - v / max);
+  const bw = (W - L) / cols.length; const barW = Math.min(36, bw * 0.62);
+  let g = "";
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4; g += `<line class="grid" x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L-6}" y="${y(v)+4}" text-anchor="end">${esc(yenK(v))}</text>`; }
+  let bars = "";
+  cols.forEach((c, i) => {
+    const x = L + bw*i + (bw - barW)/2; let acc = 0; let segs = "";
+    const vis = series.filter(s => (c.parts[s.k] || 0) > 0);
+    vis.forEach((s, j) => {
+      const v = c.parts[s.k]; const y1 = y(acc + v), y0 = y(acc); acc += v;
+      const top = j === vis.length - 1; const h = Math.max(0, y0 - y1 - (top ? 0 : 2));
+      segs += `<rect class="seg" x="${x}" y="${y1}" width="${barW}" height="${h}" rx="${top ? 3 : 0}" fill="${s.c}"/>`;
+    });
+    bars += `<g class="col${c.key === opts.sel ? " sel" : ""}" data-i="${i}" tabindex="0">${segs}<rect class="hit" x="${L + bw*i}" y="${T}" width="${bw}" height="${H - T}"/><text class="axis" x="${L + bw*i + bw/2}" y="${H - 6}" text-anchor="middle" ${c.key === opts.sel ? 'style="font-weight:700;fill:var(--ink)"' : ""}>${esc(c.label)}</text></g>`;
+  });
+  const id = "ch" + uid();
+  setTimeout(() => wireChart(id, cols, series), 0);
+  const legend = series.length > 1 ? `<div class="legend">${series.map(s => `<span><i class="sw" style="background:${s.c}"></i>${esc(s.label)}</span>`).join("")}</div>` : "";
+  return `${legend}<div class="chart" id="${id}"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(opts.aria || "График по месяцам")}">${g}${bars}</svg><div class="tip" hidden></div></div>`;
+}
+function wireChart(id, cols, series){
+  const el = document.getElementById(id); if (!el) return; const tip = el.querySelector(".tip");
+  const show = (g, ev) => {
+    const c = cols[Number(g.dataset.i)]; const tot = sum(series, s => c.parts[s.k] || 0);
+    tip.innerHTML = `<div class="h">${esc(c.full || c.label)} · <span class="num">${esc(yen(tot))}</span></div>` + series.filter(s => c.parts[s.k]).slice().reverse().map(s => `<div class="l"><i class="k" style="background:${s.c}"></i><span>${esc(s.label)}</span><b class="num">${esc(yen(c.parts[s.k]))}</b></div>`).join("");
+    tip.hidden = false;
+    const r = el.getBoundingClientRect(); const gr = g.getBoundingClientRect();
+    let left = gr.left - r.left + gr.width/2 - tip.offsetWidth/2; left = Math.max(0, Math.min(left, r.width - tip.offsetWidth));
+    tip.style.left = left + "px"; tip.style.top = Math.max(0, (ev && ev.clientY ? ev.clientY - r.top : 20) - tip.offsetHeight - 14) + "px";
+  };
+  el.querySelectorAll(".col").forEach(g => {
+    g.addEventListener("pointermove", e => show(g, e));
+    g.addEventListener("pointerleave", () => tip.hidden = true);
+    g.addEventListener("focus", () => show(g)); g.addEventListener("blur", () => tip.hidden = true);
+  });
+}
+const hbars = (rows, max) => rows.map(r => `<div class="hbar"><span class="n" title="${esc(r.label)}">${esc(r.label)}</span><span class="b"><i style="width:${max ? Math.max(2, r.v / max * 100) : 0}%"></i></span><span class="num">${esc(r.right ?? yen(r.v))}</span></div>`).join("");
+const delta = (cur, prev) => { if (!prev) return ""; const d = (cur - prev) / prev * 100; if (Math.abs(d) < 1) return `<span class="chip">≈ как в прошлом</span>`; return `<span class="chip ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${Math.abs(d).toFixed(0)}% к прошлому месяцу</span>`; };
+
+// ---------- views ----------
+function txRow(e){
+  const C = CATS[e.cat] || CATS.other;
+  const kind = e.cat === "util" && UTIL[e.kind] ? UTIL[e.kind].ru : e.cat === "tel" && TEL[e.kind] ? TEL[e.kind] : C.ru;
+  const extra = [kind !== e.title ? kind : "", e.src === "rec" ? (e.cycle === "year" ? "ежегодно" : "ежемесячно") : "", e.items && e.items.length ? e.items.length + " поз." : "", e.usage ? e.usage + " " + (UTIL[e.kind]?.unit || "") : "", e.period == 2 ? "за 2 мес." : ""].filter(Boolean).join(" · ");
+  const act = e.src === "rec" ? `data-act="edit-rec" data-id="${esc(e.rid)}"` : `data-act="edit-exp" data-id="${esc(e.id)}"`;
+  return `<div class="tx" ${act} role="button" tabindex="0"><i class="sw" style="background:${C.c}"></i><div style="min-width:0"><div class="t">${esc(e.title || kind)}</div><div class="meta">${esc(extra)} <span class="tag">${esc(whoName(e.who))}</span></div></div><b class="num">${esc(yen(e.amount))}</b></div>`;
+}
+function viewMonth(){
+  const m = S.month, list = entries(m), prev = entries(addMonths(m, -1));
+  const tot = sum(list, e => e.amount), ptot = sum(prev, e => e.amount);
+  const ct = catTotals(list);
+  const per = {a:0, b:0, both:0}; list.forEach(e => per[e.who in per ? e.who : "both"] += Number(e.amount) || 0);
+  const recs = list.filter(e => e.src === "rec").sort((a,b) => a.date < b.date ? -1 : 1);
+  const unpaid = recs.filter(r => !r.paid).length;
+  const ex = list.filter(e => e.src === "exp");
+  let byDay = ""; let last = "";
+  ex.forEach(e => { if (e.date !== last) { byDay += `<div class="daylabel">${esc(dayLabel(e.date))}</div>`; last = e.date; } byDay += txRow(e); });
+  return `
+  <section class="card">
+    <div class="hero">
+      <div><div class="label">Всего за ${esc(monthName(m).toLowerCase())}</div><div class="big num">${esc(yen(tot))}</div><div style="margin-top:8px">${delta(tot, ptot)}</div></div>
+    </div>
+    <div style="margin-top:18px" class="stackbar" role="img" aria-label="Доли категорий">${CAT_ORDER.filter(c => ct[c] > 0).map(c => `<span style="flex:${ct[c]};background:${CATS[c].c}" title="${esc(CATS[c].ru)}"></span>`).join("")}</div>
+    <div class="rows" style="margin-top:8px">${CAT_ORDER.map(c => `<div class="row"><i class="sw" style="background:${CATS[c].c}"></i><span>${esc(CATS[c].ru)} <span class="muted" style="font-size:12px">${tot ? Math.round(ct[c]/tot*100) : 0}%</span></span><b class="num">${esc(yen(ct[c]))}</b></div>`).join("")}</div>
+  </section>
+  <div class="grid2">
+    <section class="card">
+      <div class="card-h"><h2>Платежи месяца</h2>${recs.length ? `<span class="chip ${unpaid ? "warn" : "down"}">${unpaid ? "не оплачено: " + unpaid : "всё оплачено"}</span>` : ""}</div>
+      ${recs.length ? recs.map(r => `<label class="check${r.paid ? " done" : ""}"><input type="checkbox" data-act="paid" data-id="${esc(r.rid)}" ${r.paid ? "checked" : ""} ${isDemo() ? "disabled" : ""}><span class="t">${esc(r.title)} <span class="muted" style="font-size:12px">· до ${Number(r.date.slice(8))} числа · ${esc(whoName(r.who))}</span></span><b class="num">${esc(yen(r.amount))}</b></label>`).join("") : `<div class="empty">Добавьте аренду, связь и подписки как регулярные платежи — они будут появляться здесь каждый месяц.</div>`}
+    </section>
+    <section class="card">
+      <div class="card-h"><h2>Траты</h2><span class="muted">${ex.length} записей</span></div>
+      ${byDay || `<div class="empty">В этом месяце ещё нет разовых трат.<br>Нажмите «＋ Добавить», чтобы отсканировать чек или внести счёт.</div>`}
+    </section>
+  </div>`;
+}
+function viewUtilities(){
+  const D = data(), m = S.month, months = monthsBack(m, 12);
+  const kinds = ["electric","gas","water"];
+  const util = D.expenses.filter(e => e.cat === "util");
+  const billed = (k, mm) => sum(util.filter(e => e.kind === k && (e.date||"").slice(0,7) === mm), e => e.amount);
+  const cols = months.map(mm => ({label:monthName(mm, true).replace(".",""), full:monthName(mm), key:mm, parts:Object.fromEntries(kinds.map(k => [k, billed(k, mm)]))}));
+  const series = kinds.map(k => ({k, label:UTIL[k].ru, c:UTIL[k].c}));
+  const rentItems = D.recurring.filter(r => r.cat === "util" && recActive(r, m));
+  const rentOne = util.filter(e => (e.kind === "rent" || e.kind === "other") && (e.date||"").slice(0,7) === m);
+  const housing = sum(rentItems, r => amountFor(r, m)) + sum(rentOne, e => e.amount);
+  const thisMonth = sum(kinds, k => billed(k, m));
+  const cards = kinds.map(k => {
+    const bills = util.filter(e => e.kind === k).sort((a,b) => a.date < b.date ? 1 : -1);
+    const inWin = bills.filter(e => e.date.slice(0,7) >= months[0] && e.date.slice(0,7) <= m);
+    const first = inWin.length ? inWin[inWin.length-1].date.slice(0,7) : m;
+    const span = Math.max(1, months.indexOf(first) >= 0 ? months.length - months.indexOf(first) : 1);
+    const avg = sum(inWin, e => e.amount) / span;
+    const lastB = bills.find(e => e.date.slice(0,7) <= m);
+    const cur = billed(k, m), ly = billed(k, addMonths(m, -12));
+    const unitP = lastB && lastB.usage ? lastB.amount / lastB.usage : null;
+    return `<div class="card"><div class="card-h" style="margin-bottom:6px"><h3><i class="sw" style="background:${UTIL[k].c};display:inline-block;margin-right:6px"></i>${esc(UTIL[k].ru)} <span class="jp">${UTIL[k].jp}</span></h3></div>
+      <div class="kpi"><span class="label">Этот месяц</span><span class="v num">${cur ? esc(yen(cur)) : "—"}</span></div>
+      <div class="rows" style="margin-top:8px;font-size:13px">
+        <div class="row" style="grid-template-columns:1fr auto"><span class="ink2">В среднем в месяц</span><b class="num">${inWin.length ? esc(yen(avg)) : "—"}</b></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span class="ink2">Тот же месяц год назад</span><b class="num">${ly ? esc(yen(ly)) : "—"}</b></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span class="ink2">Последний счёт</span><b class="num">${lastB ? esc(yen(lastB.amount)) + (lastB.usage ? ` · ${lastB.usage} ${UTIL[k].unit}` : "") : "—"}</b></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span class="ink2">Цена за ед.</span><b class="num">${unitP ? "¥" + unitP.toFixed(1) + " / " + UTIL[k].unit : "—"}</b></div>
+      </div></div>`;
+  }).join("");
+  const table = `<details><summary>Таблица по месяцам</summary><div class="tablewrap"><table><thead><tr><th>Месяц</th>${kinds.map(k => `<th class="r">${esc(UTIL[k].ru)}</th>`).join("")}<th class="r">Итого</th></tr></thead><tbody>${cols.slice().reverse().map(c => `<tr><td>${esc(c.full)}</td>${kinds.map(k => `<td class="r num">${c.parts[k] ? esc(yen(c.parts[k])) : "—"}</td>`).join("")}<td class="r num"><b>${esc(yen(sum(kinds, k => c.parts[k])))}</b></td></tr>`).join("")}</tbody></table></div></details>`;
+  const yearSum = sum(cols, c => sum(kinds, k => c.parts[k]));
+  return `
+  <section class="card">
+    <div class="hero">
+      <div><div class="label">Жильё за ${esc(monthName(m).toLowerCase())}</div><div class="big num">${esc(yen(housing + thisMonth))}</div></div>
+      <div class="people"><div><span class="label">Аренда и обслуживание</span><b class="num">${esc(yen(housing))}</b></div><div><span class="label">Свет, газ, вода</span><b class="num">${esc(yen(thisMonth))}</b></div><div><span class="label">Счета за 12 мес.</span><b class="num">${esc(yen(yearSum))}</b></div></div>
+    </div>
+  </section>
+  <section class="card">
+    <div class="card-h"><h2>Счета за 12 месяцев</h2><span class="muted" style="font-size:12px">по месяцу оплаты</span></div>
+    ${util.length ? stackChart(cols, series, {sel:m, aria:"Счета за электричество, газ и воду по месяцам"}) + table : `<div class="empty">Внесите первый счёт за свет, газ или воду — график появится здесь.</div>`}
+  </section>
+  <div class="grid4" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">${cards}</div>
+  <section class="card"><h3 style="margin-bottom:6px">Подсказки для Японии</h3>
+    <ul class="ink2" style="margin:0;padding-left:18px;font-size:14px">
+      <li>Счёт за воду (水道) обычно приходит раз в 2 месяца — отмечайте период «2 мес.», тогда среднее в месяц будет честным.</li>
+      <li>Пик электричества — зима (エアコン на обогрев) и июль–сентябрь. Сравнивайте с тем же месяцем прошлого года, а не с прошлым месяцем.</li>
+      <li>Пропан (LPガス) обычно в 1,5–2 раза дороже городского газа (都市ガス). Цену за м³ видно в карточке «Газ».</li>
+      <li>Объём потребления (使用量) и сумма (請求金額) указаны в квитанции 検針票 или в приложении поставщика.</li>
+    </ul>
+  </section>`;
+}
+function foodStats(months){
+  const D = data();
+  const rec = D.expenses.filter(e => e.cat === "food" && months.includes((e.date||"").slice(0,7)));
+  const prod = {}, groups = {}, stores = {};
+  rec.forEach(r => {
+    stores[r.store || r.title || "—"] = (stores[r.store || r.title || "—"] || 0) + Number(r.amount || 0);
+    (r.items || []).forEach(it => {
+      const name = (it.ru || it.jp || "?").trim(); const key = name.toLowerCase();
+      const p = prod[key] || (prod[key] = {name, jp:it.jp || "", group:it.group || "Другое", n:0, spend:0});
+      p.n += Number(it.qty) || 1; p.spend += Number(it.price) || 0;
+      groups[it.group || "Другое"] = (groups[it.group || "Другое"] || 0) + (Number(it.price) || 0);
+    });
+  });
+  const P = Object.values(prod);
+  return {rec, total:sum(rec, r => r.amount), byCount:P.slice().sort((a,b) => b.n - a.n || b.spend - a.spend), bySpend:P.slice().sort((a,b) => b.spend - a.spend), groups:Object.entries(groups).sort((a,b) => b[1]-a[1]), stores:Object.entries(stores).sort((a,b) => b[1]-a[1])};
+}
+function viewFood(){
+  const m = S.month, D = data();
+  const range = S.foodRange; const months = monthsBack(m, Number(range));
+  const st = foodStats(months); const cur = foodStats([m]); const prev = foodStats([addMonths(m, -1)]);
+  const hist = monthsBack(m, 6).map(mm => ({label:monthName(mm, true).replace(".",""), full:monthName(mm), key:mm, parts:{food:foodStats([mm]).total}}));
+  const days = m === curMonth() ? Number(todayStr().slice(8)) : new Date(Number(m.slice(0,4)), Number(m.slice(5)), 0).getDate();
+  const gmax = st.groups.length ? st.groups[0][1] : 0;
+  const top = st.byCount.slice(0, 12);
+  const ins = S.insights && !isDemo() ? S.insights : null;
+  const receipts = cur.rec.slice().sort((a,b) => a.date < b.date ? 1 : -1);
+  return `
+  <section class="card">
+    <div class="hero">
+      <div><div class="label">Продукты за ${esc(monthName(m).toLowerCase())}</div><div class="big num">${esc(yen(cur.total))}</div><div style="margin-top:8px">${delta(cur.total, prev.total)}</div></div>
+      <div class="people">
+        <div><span class="label">Чеков</span><b class="num">${cur.rec.length}</b></div>
+        <div><span class="label">Средний чек</span><b class="num">${esc(yen(cur.rec.length ? cur.total / cur.rec.length : 0))}</b></div>
+        <div><span class="label">В день</span><b class="num">${esc(yen(cur.total / Math.max(1, days)))}</b></div>
+        <div><span class="label">На человека</span><b class="num">${esc(yen(cur.total / 2))}</b></div>
+      </div>
+    </div>
+    <div style="margin-top:16px">${stackChart(hist, [{k:"food", label:"Продукты", c:"var(--s3)"}], {sel:m, h:170, aria:"Расходы на продукты за 6 месяцев"})}</div>
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" data-act="scan">📷 Сканировать чек</button><button class="btn" data-act="new-exp" data-cat="food">Внести вручную</button></div>
+  </section>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2>Что мы едим</h2>
+    <div class="seg-ctl" role="group" aria-label="Период">${[["1","Месяц"],["3","3 месяца"],["6","Полгода"]].map(([v,l]) => `<button data-act="foodrange" data-v="${v}" aria-pressed="${range === v}">${l}</button>`).join("")}</div></div>
+  <div class="grid2">
+    <section class="card"><div class="card-h"><h3>Самые частые покупки</h3><span class="muted" style="font-size:12px">раз · средняя цена · всего</span></div>
+      ${top.length ? `<div class="tablewrap"><table><tbody>${top.map((p, i) => `<tr><td class="muted num">${i+1}</td><td style="white-space:normal">${esc(p.name)} ${p.jp ? `<div class="jp">${esc(p.jp)}</div>` : ""}</td><td class="r num">${p.n}×</td><td class="r num muted">${esc(yen(p.spend / p.n))}</td><td class="r num">${esc(yen(p.spend))}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Отсканируйте чеки — здесь появятся продукты, которые вы покупаете чаще всего.</div>`}
+    </section>
+    <section class="card"><div class="card-h"><h3>По группам продуктов</h3><span class="muted" style="font-size:12px">по позициям чеков</span></div>
+      ${st.groups.length ? hbars(st.groups.map(([g, v]) => ({label:g, v})), gmax) : `<div class="empty">Нет позиций за период.</div>`}
+      ${st.bySpend.length ? `<h3 style="margin-top:16px;margin-bottom:6px">Больше всего денег уходит на</h3>${hbars(st.bySpend.slice(0,6).map(p => ({label:p.name, v:p.spend})), st.bySpend[0].spend)}` : ""}
+      ${st.stores.length ? `<h3 style="margin-top:16px;margin-bottom:6px">Магазины</h3>${hbars(st.stores.slice(0,5).map(([s, v]) => ({label:s, v})), st.stores[0][1])}` : ""}
+    </section>
+  </div>
+  <section class="card ai" id="ai-card">
+    <div class="card-h"><h2>Рекомендации, рецепты и дешёвые аналоги</h2>${ins ? `<span class="muted" style="font-size:12px">обновлено ${esc(new Date(ins.generatedAt).toLocaleDateString("ru-RU"))}</span>` : ""}</div>
+    <p class="ink2" style="margin:0">Claude посмотрит ваши покупки за выбранный период и предложит, что улучшить в питании, какие блюда готовить из того, что вы и так покупаете, и чем заменить дорогие продукты в японских магазинах.</p>
+    <div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn primary" data-act="insights" ${st.byCount.length && !isDemo() ? "" : "disabled"}>${ins ? "Обновить рекомендации" : "Получить рекомендации"}</button><span class="status" id="ai-status">${isDemo() ? "Станет доступно после первых ваших чеков." : !st.byCount.length ? "Нужны чеки с позициями за период." : ""}</span></div>
+    <div id="ai-out">${ins ? renderInsights(ins.data) : ""}</div>
+  </section>
+  <section class="card"><div class="card-h"><h2>Чеки за ${esc(monthName(m).toLowerCase())}</h2></div>
+    ${receipts.length ? receipts.map(txRow).join("") : `<div class="empty">Чеков пока нет.</div>`}
+  </section>`;
+}
+function renderInsights(d){
+  if (!d) return "";
+  const L = a => Array.isArray(a) ? a : [];
+  return `<div class="ai-out">
+    ${d.summary ? `<p style="margin:0;font-size:15px">${esc(d.summary)}</p>` : ""}
+    ${L(d.nutrition).length ? `<div><h3>Питание</h3><ul>${L(d.nutrition).map(n => `<li><b>${esc(n.title)}.</b> ${esc(n.text)}</li>`).join("")}</ul></div>` : ""}
+    ${L(d.recipes).length ? `<div><h3 style="margin-bottom:8px">Рецепты из ваших продуктов</h3><div class="grid2" style="gap:10px">${L(d.recipes).map(r => `<div class="recipe"><b>${esc(r.name)}</b> ${r.jp ? `<span class="jp">${esc(r.jp)}</span>` : ""}<div class="muted" style="font-size:12px;margin:4px 0">${r.costYen ? "≈ " + esc(yen(r.costYen)) + " на двоих" : ""}${r.minutes ? " · " + esc(r.minutes) + " мин" : ""}</div><div style="font-size:13px"><b>Продукты:</b> ${esc(L(r.ingredients).join(", "))}</div>${r.steps ? `<div style="font-size:13px;margin-top:4px" class="ink2">${esc(r.steps)}</div>` : ""}</div>`).join("")}</div></div>` : ""}
+    ${L(d.swaps).length ? `<div><h3 style="margin-bottom:6px">Дешёвые аналоги</h3><div class="tablewrap"><table><thead><tr><th>Сейчас</th><th>Замена</th><th class="r">Экономия</th></tr></thead><tbody>${L(d.swaps).map(s => `<tr><td style="white-space:normal">${esc(s.from)}</td><td style="white-space:normal">${esc(s.to)}${s.note ? `<div class="muted" style="font-size:12px">${esc(s.note)}</div>` : ""}</td><td class="r num">${esc(s.saving || "")}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
+    ${L(d.tips).length ? `<div><h3>Как экономить в Японии</h3><ul>${L(d.tips).map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>` : ""}
+  </div>`;
+}
+function viewRegular(){
+  const D = data(), m = S.month;
+  const act = D.recurring.filter(r => recActive(r, m) || (r.cycle === "year" && r.startMonth <= m && (!r.endMonth || m <= r.endMonth)));
+  const monthly = r => r.cycle === "year" ? amountFor(r, m) / 12 : amountFor(r, m);
+  const sec = (cat, title) => {
+    const list = act.filter(r => r.cat === cat);
+    const by = {a:[], b:[], both:[]}; list.forEach(r => (by[r.who] || by.both).push(r));
+    const col = w => `<div class="pcol"><div class="card-h" style="margin-bottom:4px"><span class="label">${esc(whoName(w))}</span><b class="num">${esc(yen(sum(by[w], monthly)))}<span class="muted" style="font-weight:400;font-size:12px"> /мес</span></b></div>${by[w].length ? by[w].map(r => `<div class="tx" data-act="edit-rec" data-id="${esc(r.id)}" role="button" tabindex="0"><i class="sw" style="background:${CATS[cat].c}"></i><div style="min-width:0"><div class="t">${esc(r.title)}</div><div class="meta">${r.cycle === "year" ? "раз в год, " + esc(monthName(r.startMonth).split(" ")[0].toLowerCase()) : "каждый месяц, " + (r.payDay || 1) + " числа"}</div></div><b class="num">${esc(yen(amountFor(r, m)))}</b></div>`).join("") : `<div class="muted" style="font-size:13px;padding:8px 0">—</div>`}</div>`;
+    const total = sum(list, monthly);
+    return `<section class="card"><div class="card-h"><h2>${esc(title)}</h2><span class="ink2"><b class="num">${esc(yen(total))}</b> в месяц · <span class="num">${esc(yen(total*12))}</span> в год</span></div>
+      <div class="pcols">${col("a")}${col("b")}${col("both")}</div>
+      <div style="margin-top:10px"><button class="btn sm" data-act="new-rec" data-cat="${cat}">＋ ${cat === "sub" ? "Подписка" : cat === "tel" ? "Связь или интернет" : "Регулярный платёж"}</button></div></section>`;
+  };
+  const ended = D.recurring.filter(r => r.endMonth && r.endMonth < m);
+  return `
+  <div class="banner info" style="margin-top:0">Регулярные платежи сами попадают в каждый месяц. Если цена изменилась — откройте платёж и укажите новую сумму с нужного месяца: прошлые месяцы не изменятся.</div>
+  ${sec("sub", "Подписки")}
+  ${sec("tel", "Связь и интернет")}
+  ${sec("util", "Аренда и обслуживание")}
+  ${act.some(r => r.cat === "other") ? sec("other", "Другие регулярные") : ""}
+  ${ended.length ? `<section class="card"><div class="card-h"><h3>Отменённые</h3></div>${ended.map(r => `<div class="tx" data-act="edit-rec" data-id="${esc(r.id)}" role="button" tabindex="0"><i class="sw" style="background:var(--line)"></i><div><div class="t">${esc(r.title)}</div><div class="meta">до ${esc(monthName(r.endMonth))} · ${esc(whoName(r.who))}</div></div><b class="num muted">${esc(yen(amountFor(r, r.endMonth)))}</b></div>`).join("")}</section>` : ""}`;
+}
+function viewStats(){
+  const m = S.month, months = monthsBack(m, 12);
+  const per = months.map(mm => ({mm, ct:catTotals(entries(mm))}));
+  const cols = per.map(p => ({label:monthName(p.mm, true).replace(".",""), full:monthName(p.mm), key:p.mm, parts:p.ct}));
+  const series = CAT_ORDER.map(c => ({k:c, label:CATS[c].ru, c:CATS[c].c}));
+  const tots = per.map(p => sum(CAT_ORDER, c => p.ct[c]));
+  const withData = tots.filter(t => t > 0);
+  const avg = withData.length ? sum(withData) / withData.length : 0;
+  const maxI = tots.indexOf(Math.max(...tots));
+  const minI = withData.length ? tots.indexOf(Math.min(...withData)) : -1;
+  return `
+  <section class="card">
+    <div class="grid4">
+      <div class="kpi"><span class="label">Среднее в месяц</span><span class="v num">${esc(yen(avg))}</span></div>
+      <div class="kpi"><span class="label">За 12 месяцев</span><span class="v num">${esc(yen(sum(tots)))}</span></div>
+      <div class="kpi"><span class="label">Самый дорогой</span><span class="v num">${withData.length ? esc(monthName(months[maxI])) : "—"}</span><span class="muted num">${withData.length ? esc(yen(tots[maxI])) : ""}</span></div>
+      <div class="kpi"><span class="label">Самый экономный</span><span class="v num">${minI >= 0 ? esc(monthName(months[minI])) : "—"}</span><span class="muted num">${minI >= 0 ? esc(yen(tots[minI])) : ""}</span></div>
+    </div>
+  </section>
+  <section class="card"><div class="card-h"><h2>Расходы по месяцам</h2><span class="muted" style="font-size:12px">наведите на столбец</span></div>
+    ${stackChart(cols, series, {sel:m, h:240, aria:"Расходы по категориям за 12 месяцев"})}
+    <details open><summary>Таблица</summary><div class="tablewrap"><table><thead><tr><th>Месяц</th>${series.map(s => `<th class="r">${esc(s.label)}</th>`).join("")}<th class="r">Итого</th><th class="r">Δ</th></tr></thead><tbody>
+    ${per.slice().reverse().map((p, i, arr) => { const t = sum(CAT_ORDER, c => p.ct[c]); const pr = arr[i+1] ? sum(CAT_ORDER, c => arr[i+1].ct[c]) : 0; const d = pr ? Math.round((t - pr)/pr*100) : null; return `<tr><td>${esc(monthName(p.mm))}</td>${CAT_ORDER.map(c => `<td class="r num">${p.ct[c] ? esc(yen(p.ct[c])) : "—"}</td>`).join("")}<td class="r num"><b>${esc(yen(t))}</b></td><td class="r num" style="color:${d == null ? "var(--muted)" : d > 0 ? "var(--bad)" : "var(--good)"}">${d == null ? "—" : (d > 0 ? "+" : "") + d + "%"}</td></tr>`; }).join("")}
+    </tbody></table></div></details>
+  </section>`;
+}
+
+// ---------- render ----------
+function render(){
+  if (sb && !S.session) return;
+  const hash = (location.hash || "#month").slice(1);
+  S.tab = ["month","utilities","food","regular","stats"].includes(hash) ? hash : "month";
+  document.querySelectorAll("#tabs a").forEach(a => a.setAttribute("aria-current", a.getAttribute("href") === "#" + S.tab ? "page" : "false"));
+  $("#m-label").textContent = monthName(S.month);
+  $("#m-next").disabled = S.month >= curMonth(); $("#m-next").style.opacity = S.month >= curMonth() ? .3 : 1;
+  $("#sync").textContent = S.syncNote ? "нет связи" : "настройки";
+  $("#who-line").textContent = `${S.settings.a || "Марго"} и ${S.settings.b || "Миша"}`;
+  let b = "";
+  if (S.mode !== "loading" && isDemo()) b += `<div class="banner demo"><b>Пример.</b><span>Это демо-данные, чтобы было видно, как всё работает. Добавьте первую трату или регулярный платёж — пример исчезнет.</span></div>`;
+  if (S.syncNote) b += `<div class="banner info">${esc(S.syncNote)}</div>`;
+  $("#banner").innerHTML = b;
+  if (S.mode === "loading" || !(S.loaded.expenses && S.loaded.recurring)) { if (!S.syncNote) { $("#view").innerHTML = `<div class="card empty"><span class="spin"></span> Загружаем ваши расходы…</div>`; return; } }
+  const keepAi = document.getElementById("ai-out")?.dataset.busy === "1" ? document.getElementById("ai-card") : null;
+  $("#view").innerHTML = ({month:viewMonth, utilities:viewUtilities, food:viewFood, regular:viewRegular, stats:viewStats})[S.tab]();
+  if (keepAi && document.getElementById("ai-card")) document.getElementById("ai-card").replaceWith(keepAi);
+  $("#fab").hidden = !S.canWrite;
+}
+
+// ---------- modal ----------
+function openModal(title, body, onMount){
+  $("#modal").innerHTML = `<div class="overlay" data-close="1"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="sheet-h"><h2>${esc(title)}</h2><button class="x" data-close="1" aria-label="Закрыть">×</button></div>${body}</div></div>`;
+  document.body.style.overflow = "hidden";
+  onMount && onMount($("#modal .sheet"));
+  const f = $("#modal input:not([type=hidden]):not([type=file]), #modal select"); f && f.focus({preventScroll:true});
+}
+function closeModal(){ $("#modal").innerHTML = ""; document.body.style.overflow = ""; }
+$("#modal").addEventListener("click", e => { if (e.target.dataset.close) closeModal(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#modal").innerHTML) closeModal(); });
+
+function addMenu(){
+  const it = (act, cat, ic, color, t, s) => `<button data-act="${act}" data-cat="${cat}"><span class="ic" style="background:${color}">${ic}</span><span><b>${t}</b><small>${s}</small></span></button>`;
+  openModal("Добавить", `<div class="menu">
+    ${it("scan","food","📷","var(--s3)","Сканировать чек","Фото японского чека → сумма и позиции")}
+    ${it("new-exp","food","食","var(--s3)","Продукты вручную","Без фото, одной суммой")}
+    ${it("new-exp","util","光","var(--s1)","Счёт за свет, газ или воду","Сумма и потребление из квитанции")}
+    ${it("new-rec","sub","♺","var(--s2)","Подписка","Ваша, Мишина или общая")}
+    ${it("new-rec","tel","☎","var(--s4)","Связь или интернет","Регулярный платёж")}
+    ${it("new-rec","util","家","var(--s5)","Аренда","Регулярный платёж за квартиру")}
+    ${it("new-exp","other","…","var(--s5)","Другая трата","Аптека, хозтовары и т.п.")}
+  </div>`);
+}
+const whoSeg = (name, val) => `<div class="seg-ctl" role="radiogroup">${["a","b","both"].map(w => `<button type="button" data-seg="${name}" data-v="${w}" aria-pressed="${val === w}">${esc(whoName(w))}</button>`).join("")}</div><input type="hidden" name="${name}" value="${esc(val)}">`;
+function wireSeg(root){ root.querySelectorAll("[data-seg]").forEach(bt => bt.addEventListener("click", () => { const n = bt.dataset.seg; root.querySelectorAll(`[data-seg="${n}"]`).forEach(x => x.setAttribute("aria-pressed", x === bt)); root.querySelector(`input[name="${n}"]`).value = bt.dataset.v; root.querySelector(`input[name="${n}"]`).dispatchEvent(new Event("change", {bubbles:true})); })); }
+function wireDelete(btn, fn){ if (!btn) return; let armed = false; btn.addEventListener("click", () => { if (!armed) { armed = true; btn.classList.add("armed"); btn.textContent = "Точно удалить?"; setTimeout(() => { armed = false; btn.classList.remove("armed"); btn.textContent = "Удалить"; }, 3500); } else fn(); }); }
+const itemRow = (it = {}) => `<div class="item"><input data-k="ru" placeholder="Продукт" value="${esc(it.ru || "")}" aria-label="Название"><input data-k="price" type="number" inputmode="numeric" placeholder="¥" value="${esc(it.price ?? "")}" aria-label="Цена"><button type="button" class="rm" aria-label="Удалить позицию">×</button><div class="sub2"><input data-k="jp" placeholder="Как в чеке (日本語)" value="${esc(it.jp || "")}" aria-label="Название в чеке"><select data-k="group" aria-label="Группа">${GROUPS.map(g => `<option ${g === (it.group || "Другое") ? "selected" : ""}>${esc(g)}</option>`).join("")}</select><input data-k="qty" type="number" min="1" value="${esc(it.qty || 1)}" aria-label="Количество"></div></div>`;
+
+function expenseForm(e = {}, opts = {}){
+  const isEdit = !!e.id && !String(e.id).startsWith("demo");
+  const cat = e.cat || "food";
+  const body = `<form class="form" id="xf" novalidate>
+    <div class="f"><label>Категория</label><select name="cat">${["food","util","tel","other","sub"].map(c => `<option value="${c}" ${c === cat ? "selected" : ""}>${esc(CATS[c].ru)}</option>`).join("")}</select></div>
+    <div class="f" data-show="util"><label>Что оплачено</label><select name="kindU">${Object.entries(UTIL).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${esc(v.ru)} · ${v.jp}</option>`).join("")}</select></div>
+    <div class="f" data-show="tel"><label>Вид</label><select name="kindT">${Object.entries(TEL).map(([k, v]) => `<option value="${k}" ${e.kind === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div>
+    <div class="f2"><div class="f"><label for="x-title">Название</label><input id="x-title" name="title" value="${esc(e.title || "")}" placeholder="Например, Супермаркет"></div>
+      <div class="f"><label for="x-date">Дата</label><input id="x-date" type="date" name="date" value="${esc(e.date || (S.month === curMonth() ? todayStr() : S.month + "-01"))}"></div></div>
+    <div class="f2"><div class="f"><label for="x-amount">Сумма, ¥</label><input id="x-amount" name="amount" type="number" inputmode="numeric" value="${esc(e.amount ?? "")}" placeholder="0"></div>
+      <div class="f"><label>Чья трата</label>${whoSeg("who", e.who || (cat === "food" || cat === "util" ? "both" : "a"))}</div></div>
+    <div class="f3" data-show="util"><div class="f"><label for="x-usage">Потребление</label><input id="x-usage" name="usage" type="number" step="0.1" value="${esc(e.usage ?? "")}" placeholder="кВт·ч / м³"></div>
+      <div class="f"><label for="x-period">Период</label><select id="x-period" name="period"><option value="1" ${e.period != 2 ? "selected" : ""}>1 мес.</option><option value="2" ${e.period == 2 ? "selected" : ""}>2 мес.</option></select></div></div>
+    <div data-show="food" class="f"><label>Позиции чека <span class="muted" id="x-itemsum"></span></label><div class="items" id="x-items">${(e.items || []).map(itemRow).join("")}</div><button type="button" class="btn sm" id="x-additem" style="justify-self:start">＋ Позиция</button></div>
+    <div class="f"><label for="x-note">Заметка</label><input id="x-note" name="note" value="${esc(e.note || "")}"></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:4px">${isEdit ? `<button type="button" class="btn danger" id="x-del">Удалить</button>` : "<span></span>"}<div style="display:flex;gap:8px"><button type="button" class="btn" data-close="1">Отмена</button><button class="btn primary" type="submit" ${isDemo() && e.id ? "disabled" : ""}>Сохранить</button></div></div>
+    ${isDemo() && e.id ? `<div class="muted" style="font-size:12px">Это пример, его нельзя изменить.</div>` : ""}
+  </form>`;
+  openModal(opts.title || (isEdit ? "Изменить трату" : "Новая трата"), body, root => {
+    const f = root.querySelector("#xf"); wireSeg(root);
+    const sync = () => { const c = f.cat.value; root.querySelectorAll("[data-show]").forEach(el => el.hidden = el.dataset.show !== c); };
+    f.cat.addEventListener("change", sync); sync();
+    const itemsEl = root.querySelector("#x-items");
+    const upd = () => { const s = sum([...itemsEl.querySelectorAll('[data-k="price"]')], i => i.value); const a = Number(f.amount.value) || 0; root.querySelector("#x-itemsum").textContent = itemsEl.children.length ? `· сумма позиций ${yen(s)}${a && Math.abs(a - s) >= 1 ? ` (разница с итогом ${yen(a - s)}: налог/скидки)` : ""}` : ""; };
+    itemsEl.addEventListener("input", upd); f.amount.addEventListener("input", upd); upd();
+    itemsEl.addEventListener("click", ev => { if (ev.target.classList.contains("rm")) { ev.target.closest(".item").remove(); upd(); } });
+    root.querySelector("#x-additem").addEventListener("click", () => { itemsEl.insertAdjacentHTML("beforeend", itemRow()); itemsEl.lastElementChild.querySelector("input").focus(); });
+    wireDelete(root.querySelector("#x-del"), async () => { if (await safe(store.del("expenses", e.id), "Удалено")) closeModal(); });
+    f.addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const c = f.cat.value; const amount = Math.round(Number(f.amount.value));
+      if (!amount) { f.amount.focus(); f.amount.style.borderColor = "var(--bad)"; return; }
+      if (!f.date.value) { f.date.focus(); return; }
+      const kind = c === "util" ? f.kindU.value : c === "tel" ? f.kindT.value : "";
+      const rec = {cat:c, kind, title:f.title.value.trim() || (c === "util" ? UTIL[kind].ru : c === "tel" ? TEL[kind] : CATS[c].ru), amount, date:f.date.value, who:f.who.value, note:f.note.value.trim(), updatedAt:Date.now(), createdAt:e.createdAt || Date.now()};
+      if (c === "util") { if (f.usage.value) rec.usage = Number(f.usage.value); rec.period = Number(f.period.value); }
+      if (c === "food") { rec.store = e.store || rec.title; rec.items = [...itemsEl.children].map(row => { const o = {}; row.querySelectorAll("[data-k]").forEach(i => o[i.dataset.k] = i.dataset.k === "price" || i.dataset.k === "qty" ? Math.round(Number(i.value) || 0) : i.value.trim()); return o; }).filter(o => o.ru || o.jp); }
+      const btn = f.querySelector('[type="submit"]'); btn.disabled = true;
+      const ok = await safe(isEdit ? store.put("expenses", e.id, rec) : store.add("expenses", rec), "Сохранено");
+      if (ok) { closeModal(); const mm = rec.date.slice(0,7); if (mm !== S.month && mm <= curMonth()) { S.month = mm; ls.set("kk-month", mm); render(); } } else btn.disabled = false;
+    });
+  });
+}
+function recForm(r = {}, cat){
+  const isEdit = !!r.id && !String(r.id).startsWith("demo");
+  cat = r.cat || cat || "sub";
+  const cur = r.id ? amountFor(r, S.month) : "";
+  const body = `<form class="form" id="rf" novalidate>
+    <div class="f2"><div class="f"><label>Раздел</label><select name="cat">${["sub","tel","util","other"].map(c => `<option value="${c}" ${c === cat ? "selected" : ""}>${esc(c === "util" ? "Аренда и обслуживание" : CATS[c].ru)}</option>`).join("")}</select></div>
+      <div class="f" data-show="tel"><label>Вид</label><select name="kindT">${Object.entries(TEL).map(([k, v]) => `<option value="${k}" ${r.kind === k ? "selected" : ""}>${esc(v)}</option>`).join("")}</select></div>
+      <div class="f" data-show="util"><label>Вид</label><select name="kindU">${["rent","other"].map(k => `<option value="${k}" ${r.kind === k ? "selected" : ""}>${esc(UTIL[k].ru)} · ${UTIL[k].jp}</option>`).join("")}</select></div></div>
+    <div class="f"><label for="r-title">Название</label><input id="r-title" name="title" value="${esc(r.title || "")}" placeholder="${cat === "sub" ? "Например, стриминг" : cat === "util" ? "Аренда квартиры" : "Мобильная связь"}"></div>
+    <div class="f2"><div class="f"><label for="r-amount">Сумма, ¥</label><input id="r-amount" name="amount" type="number" inputmode="numeric" value="${esc(cur)}"></div>
+      <div class="f"><label for="r-cycle">Как часто</label><select id="r-cycle" name="cycle"><option value="month" ${r.cycle !== "year" ? "selected" : ""}>Каждый месяц</option><option value="year" ${r.cycle === "year" ? "selected" : ""}>Раз в год</option></select></div></div>
+    ${isEdit ? `<div class="f"><label for="r-from">Если сумма изменилась — с какого месяца</label><input id="r-from" type="month" name="from" value="${esc(S.month)}"></div>` : ""}
+    <div class="f"><label>Чей платёж</label>${whoSeg("who", r.who || (cat === "sub" ? "a" : "both"))}</div>
+    <div class="f3"><div class="f"><label for="r-start">Начало</label><input id="r-start" type="month" name="startMonth" value="${esc(r.startMonth || S.month)}"></div>
+      <div class="f"><label for="r-end">Отменён после</label><input id="r-end" type="month" name="endMonth" value="${esc(r.endMonth || "")}"></div>
+      <div class="f"><label for="r-day">День оплаты</label><input id="r-day" type="number" min="1" max="31" name="payDay" value="${esc(r.payDay || 1)}"></div></div>
+    <div style="display:flex;gap:8px;justify-content:space-between;flex-wrap:wrap;margin-top:4px">${isEdit ? `<button type="button" class="btn danger" id="r-del">Удалить</button>` : "<span></span>"}<div style="display:flex;gap:8px"><button type="button" class="btn" data-close="1">Отмена</button><button class="btn primary" type="submit" ${isDemo() && r.id ? "disabled" : ""}>Сохранить</button></div></div>
+    ${isEdit ? `<div class="muted" style="font-size:12px">Чтобы отменить подписку, укажите месяц в поле «Отменён после» — история сохранится. «Удалить» убирает платёж из всех месяцев.</div>` : ""}
+  </form>`;
+  openModal(isEdit ? "Регулярный платёж" : "Новый регулярный платёж", body, root => {
+    const f = root.querySelector("#rf"); wireSeg(root);
+    const sync = () => root.querySelectorAll("[data-show]").forEach(el => el.hidden = el.dataset.show !== f.cat.value);
+    f.cat.addEventListener("change", sync); sync();
+    wireDelete(root.querySelector("#r-del"), async () => { if (await safe(store.del("recurring", r.id), "Удалено")) closeModal(); });
+    f.addEventListener("submit", async ev => {
+      ev.preventDefault();
+      const amount = Math.round(Number(f.amount.value)); if (!amount) { f.amount.focus(); f.amount.style.borderColor = "var(--bad)"; return; }
+      if (!f.title.value.trim()) { f.title.focus(); f.title.style.borderColor = "var(--bad)"; return; }
+      const c = f.cat.value; const startMonth = f.startMonth.value || S.month;
+      let amounts = (r.amounts || (r.amount ? [{from:r.startMonth || startMonth, amount:r.amount}] : [])).map(x => ({...x}));
+      if (!isEdit) amounts = [{from:startMonth, amount}];
+      else if (amount !== cur) { const from = f.from.value || S.month; amounts = amounts.filter(x => x.from !== from); amounts.push({from, amount}); amounts.sort((a,b) => a.from < b.from ? -1 : 1); }
+      if (amounts.length && amounts[0].from > startMonth) amounts[0].from = startMonth;
+      const row = {title:f.title.value.trim(), cat:c, kind:c === "tel" ? f.kindT.value : c === "util" ? f.kindU.value : "", amount, amounts, cycle:f.cycle.value, who:f.who.value, startMonth, endMonth:f.endMonth.value || null, payDay:Math.min(31, Math.max(1, Number(f.payDay.value) || 1)), paid:r.paid || {}, createdAt:r.createdAt || Date.now(), updatedAt:Date.now()};
+      const btn = f.querySelector('[type="submit"]'); btn.disabled = true;
+      if (await safe(isEdit ? store.put("recurring", r.id, row) : store.add("recurring", row), "Сохранено")) closeModal(); else btn.disabled = false;
+    });
+  });
+}
+function settingsForm(){
+  const email = S.session && S.session.user ? S.session.user.email : "";
+  openModal("Настройки", `<form class="form" id="sf">
+    <div class="f2"><div class="f"><label for="s-a">Имя первого человека</label><input id="s-a" name="a" value="${esc(S.settings.a || "Марго")}"></div><div class="f"><label for="s-b">Имя второго</label><input id="s-b" name="b" value="${esc(S.settings.b || "Миша")}"></div></div>
+    <div class="f"><label for="s-key">Ключ Claude API (для чеков и рекомендаций)</label><input id="s-key" name="key" type="password" autocomplete="off" placeholder="${S.apiKey ? "сохранён · ••••" + esc(S.apiKey.slice(-4)) : "sk-ant-…"}"><span class="muted" style="font-size:12px">Ключ создаётся на console.anthropic.com. Вводится один раз и доступен только вам двоим. Оставьте поле пустым, чтобы не менять.</span></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" class="btn" data-close="1">Отмена</button><button class="btn primary">Сохранить</button></div>
+    <div style="border-top:1px solid var(--line);padding-top:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted" style="font-size:13px">Вы вошли как ${esc(email)}</span><button type="button" class="btn sm" id="s-out">Выйти</button></div>
+  </form>`, root => {
+    root.querySelector("#s-out").addEventListener("click", async () => { closeModal(); await sb.auth.signOut(); });
+    root.querySelector("#sf").addEventListener("submit", async ev => {
+      ev.preventDefault(); const f = ev.target;
+      let ok = await safe(store.meta("settings", {a:f.a.value.trim() || "Марго", b:f.b.value.trim() || "Миша"}));
+      const key = f.key.value.trim();
+      if (ok && key) ok = await safe(store.put("secret", "anthropic", {key}));
+      if (ok) { toast("Сохранено"); closeModal(); }
+    });
+  });
+}
+
+// ---------- Claude API ----------
+const MODEL = "claude-opus-5-5";
+function claudeClient(){ return S.apiKey ? new window.Anthropic({apiKey:S.apiKey, dangerouslyAllowBrowser:true, maxRetries:1}) : null; }
+const RECEIPT_SCHEMA = {type:"object", additionalProperties:false, required:["store","date","total","taxIncluded","items"], properties:{
+  store:{type:"string"}, date:{type:["string","null"]}, total:{type:"integer"}, taxIncluded:{type:"boolean"},
+  items:{type:"array", items:{type:"object", additionalProperties:false, required:["jp","ru","group","qty","price"], properties:{
+    jp:{type:"string"}, ru:{type:"string"}, group:{type:"string", enum:GROUPS}, qty:{type:"integer"}, price:{type:"integer"}}}}}};
+const INSIGHTS_SCHEMA = {type:"object", additionalProperties:false, required:["summary","nutrition","recipes","swaps","tips"], properties:{
+  summary:{type:"string"},
+  nutrition:{type:"array", items:{type:"object", additionalProperties:false, required:["title","text"], properties:{title:{type:"string"}, text:{type:"string"}}}},
+  recipes:{type:"array", items:{type:"object", additionalProperties:false, required:["name","jp","ingredients","steps","costYen","minutes"], properties:{name:{type:"string"}, jp:{type:"string"}, ingredients:{type:"array", items:{type:"string"}}, steps:{type:"string"}, costYen:{type:"integer"}, minutes:{type:"integer"}}}},
+  swaps:{type:"array", items:{type:"object", additionalProperties:false, required:["from","to","saving","note"], properties:{from:{type:"string"}, to:{type:"string"}, saving:{type:"string"}, note:{type:"string"}}}},
+  tips:{type:"array", items:{type:"string"}}}};
+async function askClaude(content, schema, signal){
+  const client = claudeClient(); if (!client) throw {code:"no_key"};
+  const res = await client.beta.messages.create({
+    model:MODEL, max_tokens:16000,
+    betas:["server-side-fallback-2026-07-01"], fallbacks:"default",
+    output_config:{effort:"medium", format:{type:"json_schema", schema}},
+    messages:[{role:"user", content}]
+  }, {signal});
+  if (res.stop_reason === "refusal") throw {code:"refused"};
+  if (res.stop_reason === "max_tokens") throw {code:"too_long"};
+  const text = res.content.filter(b => b.type === "text").map(b => b.text).join("");
+  try { return JSON.parse(text); } catch { throw {code:"invalid_json"}; }
+}
+function claudeErr(e){
+  const A = window.Anthropic;
+  if (e && e.code === "no_key") return "Добавьте ключ Claude API в настройках (⚙).";
+  if (e && e.code === "refused") return "Claude не смог обработать этот запрос.";
+  if (e && e.code === "too_long") return "Ответ получился слишком длинным — попробуйте ещё раз.";
+  if (e && e.code === "invalid_json") return "Не получилось разобрать ответ — попробуйте ещё раз.";
+  if (A && e instanceof A.APIUserAbortError) return "Остановлено.";
+  if (A && e instanceof A.AuthenticationError) return "Ключ Claude API не подходит. Проверьте его в настройках.";
+  if (A && e instanceof A.PermissionDeniedError) return "У ключа нет доступа. Проверьте ключ и баланс в консоли Anthropic.";
+  if (A && e instanceof A.RateLimitError) return "Слишком много запросов — попробуйте через минуту.";
+  if (A && e instanceof A.BadRequestError) return /credit|balance/i.test(e.message || "") ? "На счёте Anthropic закончились деньги — пополните баланс." : "Запрос отклонён: " + (e.message || "");
+  if (A && e instanceof A.APIConnectionError) return "Нет связи с Claude. Проверьте интернет.";
+  if (A && e instanceof A.APIError) return "Ошибка Claude (" + (e.status || "?") + "). Попробуйте ещё раз.";
+  return "Не получилось — попробуйте ещё раз.";
+}
+async function toBase64Jpeg(file){
+  const bmp = await createImageBitmap(file);
+  const k = Math.min(1, 2000 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  const url = c.toDataURL("image/jpeg", 0.85);
+  return {url, data:url.split(",")[1]};
+}
+function scanFlow(){
+  if (!S.apiKey) {
+    openModal("Сканирование чека", `<p>Чтобы распознавать чеки, добавьте ключ Claude API в настройках. Его достаточно ввести один раз — у Миши он появится автоматически.</p><div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn" id="sc-man">Внести вручную</button><button class="btn primary" id="sc-set">Открыть настройки</button></div>`, root => {
+      root.querySelector("#sc-man").addEventListener("click", () => expenseForm({cat:"food"}));
+      root.querySelector("#sc-set").addEventListener("click", settingsForm);
+    });
+    return;
+  }
+  const max = 4;
+  openModal("Сканировать чек", `<div class="form">
+    <div class="drop" id="sc-drop">
+      <div class="thumbs" id="sc-thumbs"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <label class="btn primary">📷 Сфотографировать<input type="file" id="sc-cam" accept="image/*" capture="environment" hidden></label>
+        <label class="btn">Выбрать фото<input type="file" id="sc-file" accept="image/*" multiple hidden></label>
+      </div>
+      <div class="muted" style="font-size:12px">Чек целиком, ровно и при хорошем свете. Длинный чек можно снять частями — до ${max} фото.</div>
+    </div>
+    <div class="f"><label>Чья покупка</label>${whoSeg("who", "both")}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><span class="status" id="sc-status"></span><div style="display:flex;gap:8px"><button class="btn" id="sc-stop" hidden>Стоп</button><button class="btn primary" id="sc-go" disabled>Распознать</button></div></div>
+  </div>`, root => {
+    wireSeg(root);
+    let imgs = []; let ctl = null;
+    const st = root.querySelector("#sc-status"), go = root.querySelector("#sc-go"), stop = root.querySelector("#sc-stop");
+    const addFiles = async list => {
+      for (const f of list) { if (imgs.length >= max) break; if (!/^image\//.test(f.type) && !/\.(heic|heif|jpe?g|png|webp)$/i.test(f.name)) continue; try { imgs.push(await toBase64Jpeg(f)); } catch { st.textContent = "Это фото не открылось. Попробуйте сделать снимок камерой."; } }
+      const th = root.querySelector("#sc-thumbs"); th.innerHTML = ""; imgs.forEach(b => { const i = document.createElement("img"); i.src = b.url; i.alt = "Фото чека"; th.append(i); });
+      go.disabled = !imgs.length; if (imgs.length) st.textContent = `Фото: ${imgs.length}`;
+    };
+    root.querySelector("#sc-cam").addEventListener("change", e => addFiles([...e.target.files]));
+    root.querySelector("#sc-file").addEventListener("change", e => addFiles([...e.target.files]));
+    const drop = root.querySelector("#sc-drop");
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.style.borderColor = "var(--accent)"; });
+    drop.addEventListener("dragleave", () => drop.style.borderColor = "");
+    drop.addEventListener("drop", e => { e.preventDefault(); drop.style.borderColor = ""; addFiles([...e.dataTransfer.files]); });
+    stop.addEventListener("click", () => ctl && ctl.abort());
+    go.addEventListener("click", async () => {
+      ctl = new AbortController(); go.disabled = true; stop.hidden = false;
+      st.innerHTML = `<span class="spin"></span> Читаем чек… обычно 20–60 секунд`;
+      const who = root.querySelector('input[name="who"]').value;
+      const prompt = `На ${imgs.length > 1 ? "фото — части одного" : "фото —"} японского кассового чека (レシート) из магазина в Японии. Извлеки данные для учёта расходов семьи.
+Правила:
+- total — итог к оплате в иенах с налогом (合計 / お買上計 / 領収金額), целое число.
+- taxIncluded — true, если цены позиций уже с налогом (内税), false если налог добавлен в конце (外税).
+- price — итоговая цена строки в иенах, как напечатано (строка «2コ×98» — price 196, qty 2).
+- Скидки (値引, 割引, 半額, クーポン) вычти из позиции, к которой они относятся. Если непонятно к какой — отдельная позиция с отрицательной ценой, ru "Скидка", group "Другое".
+- НЕ включай строки 小計, 消費税/内税/外税, 合計, お預り, お釣り, ポイント, способ оплаты.
+- jp — строка товара как в чеке. ru — короткое нормализованное название по-русски без бренда, веса и упаковки: "Куриное бедро", "Молоко", "Яйца", "Тофу", "Онигири". Если товар не распознан — транслитерация и "(?)".
+- date — в формате YYYY-MM-DD. Год может быть указан как 令和 (令和8年 = 2026). Если даты нет — null.
+- store — название магазина как на чеке.`;
+      try {
+        const content = [...imgs.map(b => ({type:"image", source:{type:"base64", media_type:"image/jpeg", data:b.data}})), {type:"text", text:prompt}];
+        const res = await askClaude(content, RECEIPT_SCHEMA, ctl.signal);
+        const items = (Array.isArray(res.items) ? res.items : []).map(i => ({jp:String(i.jp || ""), ru:String(i.ru || i.jp || ""), group:GROUPS.includes(i.group) ? i.group : "Другое", qty:Math.max(1, Math.round(Number(i.qty) || 1)), price:Math.round(Number(i.price) || 0)}));
+        const total = Math.round(Number(res.total) || 0) || Math.round(sum(items, i => i.price) * (res.taxIncluded === false ? 1.08 : 1));
+        const date = /^\d{4}-\d{2}-\d{2}$/.test(res.date || "") ? res.date : todayStr();
+        expenseForm({cat:"food", title:res.store || "Супермаркет", store:res.store || "", date, amount:total, who, items}, {title:"Проверьте чек"});
+        toast(`Распознано позиций: ${items.length}. Проверьте и сохраните.`);
+      } catch (e) {
+        stop.hidden = true; go.disabled = false; st.textContent = claudeErr(e);
+      }
+    });
+  });
+}
+async function runInsights(){
+  const stEl = $("#ai-status"); const out = $("#ai-out"); const btn = document.querySelector('[data-act="insights"]');
+  if (!S.apiKey) { stEl.textContent = "Добавьте ключ Claude API в настройках (⚙)."; return; }
+  const months = monthsBack(S.month, Number(S.foodRange)); const st = foodStats(months);
+  const lines = st.byCount.slice(0, 45).map(p => `${p.name}${p.jp ? " (" + p.jp + ")" : ""}: куплено ${p.n} раз, всего ¥${Math.round(p.spend)}, ~¥${Math.round(p.spend / p.n)} за раз, группа «${p.group}»`).join("\n");
+  const groups = st.groups.map(([g, v]) => `${g}: ¥${Math.round(v)}`).join("; ");
+  const perMonth = months.map(mm => `${mm}: ¥${Math.round(foodStats([mm]).total)}`).join("; ");
+  const prompt = `Ты помощник по питанию и семейному бюджету. Пара из двух взрослых живёт в Японии и покупает продукты в японских супермаркетах (スーパー, 業務スーパー, ドラッグストア, コンビニ). Ниже их покупки за ${months.length} мес. по чекам.
+
+Расходы на продукты по месяцам: ${perMonth}
+По группам: ${groups}
+Продукты (по частоте):
+${lines}
+
+Дай практичные советы на русском языке:
+- summary: 2–3 предложения, общая картина питания и трат.
+- nutrition (3–5): чего не хватает или что в избытке и что конкретно добавить.
+- recipes (4): блюда в основном из их частых покупок; jp — японское название, если блюдо японское, иначе пустая строка; steps — 2–3 предложения; costYen — примерная стоимость на двоих; minutes — время готовки.
+- swaps (4–6): дорогой продукт из их списка → более дешёвая замена с японским названием для поиска в магазине; saving — например «≈¥800 в месяц»; note — где искать или почему.
+- tips (3–5): советы по экономии именно в Японии (вечерние скидки 値引き/半額, сезонные продукты 旬, ポイントカード, 業務スーパー, заморозка), с привязкой к их покупкам.
+Цены — реалистичные для Японии 2026 года.`;
+  btn.disabled = true; out.dataset.busy = "1"; stEl.innerHTML = `<span class="spin"></span> Claude анализирует покупки… это может занять минуту`;
+  try {
+    const d = await askClaude(prompt, INSIGHTS_SCHEMA);
+    out.dataset.busy = ""; out.innerHTML = renderInsights(d); stEl.textContent = "";
+    await safe(store.meta("food", {generatedAt:Date.now(), months, data:d}));
+  } catch (e) { out.dataset.busy = ""; stEl.textContent = claudeErr(e); }
+  finally { btn.disabled = false; }
+}
+
+// ---------- auth ----------
+function authView(){
+  $("#tabs").hidden = true; $("#fab").hidden = true; $("#banner").innerHTML = "";
+  if (!configured) { $("#view").innerHTML = `<section class="card"><h2>Почти готово</h2><p class="ink2">Приложение ещё не подключено к базе данных. Впишите адрес и ключ Supabase в файл <b>config.js</b> — инструкция в README.</p></section>`; return; }
+  $("#view").innerHTML = `<section class="card" style="max-width:420px;margin:24px auto 0;width:100%">
+    <h2 style="margin-bottom:6px">Вход</h2><p class="ink2" style="margin:0 0 14px;font-size:14px">Марго и Миша входят каждый под своей почтой. Данные у вас общие.</p>
+    <form class="form" id="af" novalidate>
+      <div class="f"><label for="a-email">Почта</label><input id="a-email" name="email" type="email" autocomplete="email" required></div>
+      <div class="f"><label for="a-pass">Пароль</label><input id="a-pass" name="pass" type="password" autocomplete="current-password" minlength="6" required></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" style="flex:1">Войти</button><button class="btn" type="button" id="a-signup" style="flex:1">Создать аккаунт</button></div>
+      <div class="status" id="a-status"></div>
+    </form></section>`;
+  const f = $("#af"), st = $("#a-status");
+  const go = async signup => {
+    const email = f.email.value.trim(), password = f.pass.value;
+    if (!email || password.length < 6) { st.textContent = "Введите почту и пароль не короче 6 символов."; return; }
+    st.innerHTML = `<span class="spin"></span> Подождите…`;
+    const {data, error} = signup ? await sb.auth.signUp({email, password}) : await sb.auth.signInWithPassword({email, password});
+    if (error) { st.textContent = /Invalid login/i.test(error.message) ? "Неверная почта или пароль." : /already registered/i.test(error.message) ? "Такой аккаунт уже есть — нажмите «Войти»." : /not allowed|disabled/i.test(error.message) ? "Регистрация закрыта. Попросите Марго открыть её в Supabase." : error.message; return; }
+    if (signup && !data.session) st.textContent = "Аккаунт создан. Подтвердите почту по ссылке из письма, затем войдите.";
+  };
+  f.addEventListener("submit", e => { e.preventDefault(); go(false); });
+  $("#a-signup").addEventListener("click", () => go(true));
+}
+async function boot(){
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  if (!sb) { authView(); return; }
+  const {data} = await sb.auth.getSession();
+  S.session = data.session;
+  if (S.session) { $("#tabs").hidden = false; store.start(); } else authView();
+  sb.auth.onAuthStateChange((ev, session) => {
+    const was = !!S.session; S.session = session;
+    if (session && !was) { $("#tabs").hidden = false; store.start(); }
+    if (!session && was) { S.mode = "loading"; store.rows.clear(); S.expenses = []; S.recurring = []; authView(); }
+  });
+}
+
+// ---------- events ----------
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-act]"); if (!t) return;
+  const a = t.dataset.act, id = t.dataset.id;
+  if (a === "paid") return; // handled by change
+  const D = data();
+  if (a === "edit-exp") expenseForm(D.expenses.find(x => x.id === id) || {});
+  else if (a === "edit-rec") recForm(D.recurring.find(x => x.id === id) || {});
+  else if (a === "new-exp") { closeModal(); expenseForm({cat:t.dataset.cat}); }
+  else if (a === "new-rec") { closeModal(); recForm({}, t.dataset.cat); }
+  else if (a === "scan") { closeModal(); scanFlow(); }
+  else if (a === "foodrange") { S.foodRange = t.dataset.v; ls.set("kk-foodrange", S.foodRange); render(); }
+  else if (a === "insights") runInsights();
+});
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tx[role=button]")) { e.preventDefault(); e.target.click(); } });
+document.addEventListener("change", e => { const t = e.target; if (t.dataset && t.dataset.act === "paid") safe(store.setPaid(t.dataset.id, S.month, t.checked)); });
+$("#fab").addEventListener("click", addMenu);
+$("#btn-settings").addEventListener("click", settingsForm);
+$("#m-prev").addEventListener("click", () => { S.month = addMonths(S.month, -1); ls.set("kk-month", S.month); render(); });
+$("#m-next").addEventListener("click", () => { if (S.month < curMonth()) { S.month = addMonths(S.month, 1); ls.set("kk-month", S.month); render(); } });
+window.addEventListener("hashchange", render);
+
+boot();
+})();
+</script>
+</body>
+</html>
