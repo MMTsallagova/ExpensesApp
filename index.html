@@ -187,7 +187,7 @@ details>summary{cursor:pointer;color:var(--ink-2);font-weight:600;font-size:13px
   <header class="top">
     <div class="brand">
       <div class="brand-l">
-        <div><h1>Расходы</h1><div class="sub" id="who-line">Марго и Миша</div></div>
+        <div><h1>Расходы</h1></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="monthnav" role="group" aria-label="Месяц">
@@ -655,7 +655,6 @@ function render(){
   $("#m-label").textContent = monthName(S.month);
   $("#m-next").disabled = S.month >= curMonth(); $("#m-next").style.opacity = S.month >= curMonth() ? .3 : 1;
   $("#sync").textContent = S.syncNote ? "нет связи" : "настройки";
-  $("#who-line").textContent = `${S.settings.a || "Марго"} и ${S.settings.b || "Миша"}`;
   let b = "";
   if (S.mode !== "loading" && isDemo()) b += `<div class="banner demo"><b>Пример.</b><span>Это демо-данные, чтобы было видно, как всё работает. Добавьте первую трату или регулярный платёж — пример исчезнет.</span></div>`;
   if (S.syncNote) b += `<div class="banner info">${esc(S.syncNote)}</div>`;
