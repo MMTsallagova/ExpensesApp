@@ -106,6 +106,8 @@ main{display:grid;gap:16px;margin-top:16px}
 .btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
 .btn:disabled{opacity:.55;cursor:default}
 .btn.sm{padding:5px 10px;font-size:13px}
+.addtop{display:none}
+@media (min-width:700px){.addtop{display:inline-flex}.fab{display:none}}
 .fab{position:fixed;right:max(18px,calc(env(safe-area-inset-right,0px) + 18px));bottom:calc(env(safe-area-inset-bottom,0px) + 18px);z-index:6;background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:14px 20px;font-weight:700;font-size:15px;box-shadow:0 6px 20px rgba(20,40,90,.28)}
 table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{text-align:left;padding:7px 8px;border-top:1px solid var(--line);white-space:nowrap}
@@ -195,6 +197,7 @@ details>summary{cursor:pointer;color:var(--ink-2);font-weight:600;font-size:13px
           <div class="m" id="m-label"></div>
           <button id="m-next" aria-label="Следующий месяц">›</button>
         </div>
+        <button class="btn primary addtop" id="btn-add">＋ Добавить</button>
         <button class="iconbtn" id="btn-settings" aria-label="Настройки">⚙ <span id="sync">…</span></button>
       </div>
     </div>
@@ -664,6 +667,7 @@ function render(){
   $("#view").innerHTML = ({month:viewMonth, utilities:viewUtilities, food:viewFood, regular:viewRegular, stats:viewStats})[S.tab]();
   if (keepAi && document.getElementById("ai-card")) document.getElementById("ai-card").replaceWith(keepAi);
   $("#fab").hidden = !S.canWrite;
+  $("#btn-add").hidden = !S.canWrite;
 }
 
 // ---------- modal ----------
@@ -940,7 +944,7 @@ ${lines}
 
 // ---------- auth ----------
 function authView(){
-  $("#tabs").hidden = true; $("#fab").hidden = true; $("#banner").innerHTML = "";
+  $("#tabs").hidden = true; $("#fab").hidden = true; $("#btn-add").hidden = true; $("#banner").innerHTML = "";
   if (!configured) { $("#view").innerHTML = `<section class="card"><h2>Почти готово</h2><p class="ink2">Приложение ещё не подключено к базе данных. Впишите адрес и ключ Supabase в файл <b>config.js</b> — инструкция в README.</p></section>`; return; }
   $("#view").innerHTML = `<section class="card" style="max-width:420px;margin:24px auto 0;width:100%">
     <h2 style="margin-bottom:14px">Вход</h2>
@@ -963,7 +967,11 @@ function authView(){
   $("#a-signup").addEventListener("click", () => go(true));
 }
 async function boot(){
-  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator) {
+    const hadController = !!navigator.serviceWorker.controller; let reloaded = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController && !reloaded) { reloaded = true; location.reload(); } });
+    navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(r => r.update()).catch(() => {});
+  }
   if (!sb) { authView(); return; }
   const linkErr = /error_code=otp_expired|error=access_denied/.test(location.hash);
   if (/(^#|&)(error|access_token)=/.test(location.hash)) setTimeout(() => history.replaceState(null, "", location.pathname + "#month"), 0);
@@ -995,6 +1003,7 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tx[role=button]")) { e.preventDefault(); e.target.click(); } });
 document.addEventListener("change", e => { const t = e.target; if (t.dataset && t.dataset.act === "paid") safe(store.setPaid(t.dataset.id, S.month, t.checked)); });
 $("#fab").addEventListener("click", addMenu);
+$("#btn-add").addEventListener("click", addMenu);
 $("#btn-settings").addEventListener("click", settingsForm);
 $("#m-prev").addEventListener("click", () => { S.month = addMonths(S.month, -1); ls.set("kk-month", S.month); render(); });
 $("#m-next").addEventListener("click", () => { if (S.month < curMonth()) { S.month = addMonths(S.month, 1); ls.set("kk-month", S.month); render(); } });
