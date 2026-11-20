@@ -296,7 +296,7 @@ const store = {
   },
   async start(){
     S.mode = "db";
-    try { await this.loadAll(); } catch (e) { S.syncNote = "Не удалось загрузить данные: " + (e.message || e) + ". Проверьте интернет."; render(); }
+    try { await this.loadAll(); } catch (e) { S.syncNote = /fetch|network/i.test(e.message || "") ? "Нет связи с сервером. Проверьте интернет." : "Не удалось загрузить данные: " + (e.message || e); render(); }
     if (this.channel) sb.removeChannel(this.channel);
     this.channel = sb.channel("docs-live").on("postgres_changes", {event:"*", schema:"public", table:"docs"}, p => {
       if (p.eventType === "DELETE") { if (p.old && p.old.collection) this.rows.delete(this.key(p.old.collection, p.old.id)); else { this.loadAll().catch(() => {}); return; } }
