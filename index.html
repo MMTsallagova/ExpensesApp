@@ -944,7 +944,7 @@ function authView(){
   $("#tabs").hidden = true; $("#fab").hidden = true; $("#banner").innerHTML = "";
   if (!configured) { $("#view").innerHTML = `<section class="card"><h2>Почти готово</h2><p class="ink2">Приложение ещё не подключено к базе данных. Впишите адрес и ключ Supabase в файл <b>config.js</b> — инструкция в README.</p></section>`; return; }
   $("#view").innerHTML = `<section class="card" style="max-width:420px;margin:24px auto 0;width:100%">
-    <h2 style="margin-bottom:6px">Вход</h2><p class="ink2" style="margin:0 0 14px;font-size:14px">Марго и Миша входят каждый под своей почтой. Данные у вас общие.</p>
+    <h2 style="margin-bottom:14px">Вход</h2>
     <form class="form" id="af" novalidate>
       <div class="f"><label for="a-email">Почта</label><input id="a-email" name="email" type="email" autocomplete="email" required></div>
       <div class="f"><label for="a-pass">Пароль</label><input id="a-pass" name="pass" type="password" autocomplete="current-password" minlength="6" required></div>
@@ -957,7 +957,7 @@ function authView(){
     if (!email || password.length < 6) { st.textContent = "Введите почту и пароль не короче 6 символов."; return; }
     st.innerHTML = `<span class="spin"></span> Подождите…`;
     const {data, error} = signup ? await sb.auth.signUp({email, password}) : await sb.auth.signInWithPassword({email, password});
-    if (error) { st.textContent = /Invalid login/i.test(error.message) ? "Неверная почта или пароль." : /already registered/i.test(error.message) ? "Такой аккаунт уже есть — нажмите «Войти»." : /not allowed|disabled/i.test(error.message) ? "Регистрация закрыта. Попросите Марго открыть её в Supabase." : error.message; return; }
+    if (error) { st.textContent = /Invalid login/i.test(error.message) ? "Неверная почта или пароль. Если входите впервые — нажмите «Создать аккаунт»." : /already registered/i.test(error.message) ? "Такой аккаунт уже есть — нажмите «Войти»." : /not allowed|disabled/i.test(error.message) ? "Регистрация закрыта. Попросите Марго открыть её в Supabase." : error.message; return; }
     if (signup && !data.session) st.textContent = "Аккаунт создан. Подтвердите почту по ссылке из письма, затем войдите.";
   };
   f.addEventListener("submit", e => { e.preventDefault(); go(false); });
